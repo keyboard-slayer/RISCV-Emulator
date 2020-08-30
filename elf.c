@@ -35,42 +35,42 @@
 #include <stddef.h>
 #include <string.h>
 #include <byteswap.h>
+#include <unistd.h>
 
 void
 swap_bytes(struct ELF *elf)
 {
-    if (elf->name.e_ident.name.endianness > 1)
+    if (elf->endianness > 2 || elf->endianness > 1)
     {
-        fprintf(stderr, "Invalid ELF Header !\n");
+        fprintf(stderr, "Invalid ELF endianness: %d !\n", elf->endianness);
         exit(1);
     }
 
 
-    if (elf->name.e_ident.name.endianness == 0)
+    if (elf->endianness == 2)
     {
         return;
     }
 
-    elf->name.e_ident.name.magic = __bswap_32(elf->name.e_ident.name.magic);
-    elf->name.e_type = __bswap_16(elf->name.e_type);
-    elf->name.e_machine = __bswap_16(elf->name.e_machine);
-    elf->name.e_version = __bswap_32(elf->name.e_machine);
-    elf->name.e_entry = __bswap_64(elf->name.e_entry);
-    elf->name.e_phoff = __bswap_64(elf->name.e_phoff);
-    elf->name.e_flags = __bswap_32(elf->name.e_flags);
-    elf->name.e_ehsize = __bswap_16(elf->name.e_ehsize);
-    elf->name.e_phentsize = __bswap_16(elf->name.e_phentsize);
-    elf->name.e_phnum = __bswap_16(elf->name.e_phnum);
-    elf->name.e_shentsize = __bswap_16(elf->name.e_shentsize);
-    elf->name.e_shnum = __bswap_16(elf->name.e_shnum);
-    elf->name.e_shstrndx = __bswap_16(elf->name.e_shstrndx);
+    elf->magic = __bswap_32(elf->magic);
+    elf->e_type = __bswap_16(elf->e_type);
+    elf->e_machine = __bswap_16(elf->e_machine);
+    elf->e_version = __bswap_32(elf->e_machine);
+    elf->e_entry = __bswap_64(elf->e_entry);
+    elf->e_phoff = __bswap_64(elf->e_phoff);
+    elf->e_flags = __bswap_32(elf->e_flags);
+    elf->e_ehsize = __bswap_16(elf->e_ehsize);
+    elf->e_phentsize = __bswap_16(elf->e_phentsize);
+    elf->e_phnum = __bswap_16(elf->e_phnum);
+    elf->e_shentsize = __bswap_16(elf->e_shentsize);
+    elf->e_shnum = __bswap_16(elf->e_shnum);
+    elf->e_shstrndx = __bswap_16(elf->e_shstrndx);
 }
 
 
 struct ELF
 open_elf(char *filename)
 {
-    size_t i;
     struct ELF elf;
     FILE *fp = fopen(filename, "rb");
 
@@ -80,28 +80,25 @@ open_elf(char *filename)
         exit(1);
     }
 
-    while (i < 64)
-    {
-        elf.name.e_ident.array[i++] = fgetc(fp);
-    }
 
+    fread(&elf, sizeof(struct ELF), 1, fp);
     swap_bytes(&elf);
 
-    if (elf.name.e_ident.name.magic != 0x7f454c46)
+    if (elf.magic != 0x7f454c46)
     {
         printf("%s is not a valid ELF file\nMAGIC: 0x%x", filename,
-               elf.name.e_ident.name.magic);
+               elf.magic);
         exit(1);
     }
 
-    if (elf.name.e_ident.name.abi != 0x03 && elf.name.e_ident.name.abi != 0x00)
+    if (elf.abi != 0x03 && elf.abi != 0x00)
     {
         printf("This emulator can only emulate Linux Binaries\n");
         exit(1);
     }
 
 
-    if (elf.name.e_machine != 0xf300)
+    if (elf.e_machine != 0xf300)
     {
         printf("%s is not a valid RISV binary\n", filename);
         exit(1);

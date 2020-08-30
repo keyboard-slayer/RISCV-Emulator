@@ -45,7 +45,8 @@ main(int argc, char *argv[])
     }
 
     elf = open_elf(argv[1]);
-    printf("0x%x\n", elf.name.e_ident.name.magic);
 
-    return 1;
+    printf("%x\n", elf.magic);
+
+    return 0;
 }
