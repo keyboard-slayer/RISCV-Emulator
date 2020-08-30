@@ -16,6 +16,37 @@
 #include <byteswap.h>
 
 void
+swap_bytes(struct ELF *elf)
+{
+    if (elf->name.e_ident.name.endianness > 1)
+    {
+        fprintf(stderr, "Invalid ELF Header !\n");
+        exit(1);
+    }
+
+
+    if (elf->name.e_ident.name.endianness == 0)
+    {
+        return;
+    }
+
+    elf->name.e_ident.name.magic = __bswap_32(elf->name.e_ident.name.magic);
+    elf->name.e_type = __bswap_16(elf->name.e_type);
+    elf->name.e_machine = __bswap_16(elf->name.e_machine);
+    elf->name.e_version = __bswap_32(elf->name.e_machine);
+    elf->name.e_entry = __bswap_64(elf->name.e_entry);
+    elf->name.e_phoff = __bswap_64(elf->name.e_phoff);
+    elf->name.e_flags = __bswap_32(elf->name.e_flags);
+    elf->name.e_ehsize = __bswap_16(elf->name.e_ehsize);
+    elf->name.e_phentsize = __bswap_16(elf->name.e_phentsize);
+    elf->name.e_phnum = __bswap_16(elf->name.e_phnum);
+    elf->name.e_shentsize = __bswap_16(elf->name.e_shentsize);
+    elf->name.e_shnum = __bswap_16(elf->name.e_shnum);
+    elf->name.e_shstrndx = __bswap_16(elf->name.e_shstrndx);
+}
+
+
+struct ELF
 open_elf(char *filename)
 {
     size_t i;
@@ -28,20 +59,33 @@ open_elf(char *filename)
         exit(1);
     }
 
-    while (i < 8)
+    while (i < 64)
     {
-        elf.e_ident.array[i++] = fgetc(fp);
+        elf.name.e_ident.array[i++] = fgetc(fp);
     }
 
-    if ((elf.e_ident.name.endianness > 1)
-        || (elf.e_ident.name.endianness == 1
-            && __bswap_32(elf.e_ident.name.magic) != 0x7f454c46)
-        || (elf.e_ident.name.endianness == 0 && elf.e_ident.name.magic != 0x7f454c46))
+    swap_bytes(&elf);
+
+    if (elf.name.e_ident.name.magic != 0x7f454c46)
     {
         printf("%s is not a valid ELF file\nMAGIC: 0x%x", filename,
-               __bswap_32(elf.e_ident.name.magic));
+               elf.name.e_ident.name.magic);
         exit(1);
     }
 
-    printf("%x", elf.e_ident.name.endianness);
+    if (elf.name.e_ident.name.abi != 0x03 && elf.name.e_ident.name.abi != 0x00)
+    {
+        printf("This emulator can only emulate Linux Binaries\n");
+        exit(1);
+    }
+
+
+    if (elf.name.e_machine != 0xf300)
+    {
+        printf("%s is not a valid RISV binary\n", filename);
+        exit(1);
+    }
+
+    fclose(fp);
+    return elf;
 }

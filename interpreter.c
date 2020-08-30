@@ -15,13 +15,16 @@
 int
 main(int argc, char *argv[])
 {
+    struct ELF elf;
+
     if (argc == 1)
     {
         fprintf(stderr, "Please specify a RISCV binary file\n");
         exit(1);
     }
 
-    open_elf(argv[1]);
+    elf = open_elf(argv[1]);
+    printf("0x%x\n", elf.name.e_ident.name.magic);
 
     return 1;
 }
