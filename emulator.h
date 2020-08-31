@@ -37,7 +37,7 @@
 #include "cpu.h"
 
 void emulate(struct ELF, char *);
-void copy2ram(struct CPU *, FILE *, uint64_t, uint64_t, uint64_t);
-void dump_ram(struct CPU *);
+int8_t copy2ram(struct CPU *, FILE *, uint64_t, uint64_t, uint64_t);
+void dump_ram_region(struct CPU *, size_t, size_t);
 
 #endif

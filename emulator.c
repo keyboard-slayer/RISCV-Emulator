@@ -29,17 +29,22 @@
 
 #include "emulator.h"
 #include "elf.h"
+
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 
 void
 emulate(struct ELF elf, char *filename)
 {
     size_t i;
+    uint64_t file_size;
+    
     struct CPU cpu;
     struct PROG prog;
-    uint64_t file_size;
+    struct SECTION section;
 
     FILE *fp = fopen(filename, "rb");
 
@@ -47,50 +52,90 @@ emulate(struct ELF elf, char *filename)
     file_size = ftell(fp);
 
     reset_cpu(&cpu, file_size);
-    
-    for(i = 0; i < elf.e_phnum; i++)
+
+    for (i = 0; i < elf.e_phnum; i++)
     {
         fseek(fp, elf.e_phoff + (i * elf.e_phentsize), SEEK_SET);
-        fread(&prog, 1, sizeof(struct PROG), fp);
+        fread(&prog, sizeof(struct PROG), 1, fp);
 
-        if(prog.p_type == 0x1)
+        if (prog.p_type == 0x1)
         {
-            printf("%lx %lx %lx\n", prog.p_offset, prog.p_filesz, prog.p_vaddr);
             copy2ram(&cpu, fp, prog.p_offset, prog.p_filesz, prog.p_vaddr);
         }
-
+        
+        else 
+        {
+            printf("0x%x is undefined !\n", prog.p_type);
+            exit(1);
+        }
     }
-    
-    dump_ram(&cpu); 
+
+    for (i = 0; i < elf.e_shnum; i++)
+    {
+        fseek(fp, elf.e_shoff + (i * elf.e_shentsize), SEEK_SET);
+        fread(&section, sizeof(struct SECTION), 1, fp);
+        copy2ram(&cpu, fp, section.sh_offset, section.sh_size, section.sh_addr);
+    }
 }
 
-void 
-copy2ram(struct CPU *cpu, FILE *fp, uint64_t src, uint64_t size, uint64_t dst)
+int8_t
+copy2ram(struct CPU *cpu, FILE * fp, uint64_t src, uint64_t size, uint64_t dst)
 {
+    size_t i;
+    struct CPU cpu_snapshot;
+    reset_cpu(&cpu_snapshot, cpu->ram_size-0x1000000);
+    memcpy(cpu_snapshot.ram, cpu->ram, cpu->ram_size);
+
     fseek(fp, src, SEEK_SET);
-    printf("%ld == %ld\n", fread(&cpu->ram[dst],size, 1,  fp), size);
+    fread(&cpu->ram[dst], size, 1, fp);
+
+    for(i = dst; i < dst+size; i++)
+    {
+        if(cpu->ram[i] != cpu_snapshot.ram[i] && cpu_snapshot.ram[i] != 0)
+        {
+            printf("\nMEMORY OVERWRITTEN !\n");
+            printf("Offset: 0x%lx\n", dst+i);
+            printf("Before:\n");
+            dump_ram_region(&cpu_snapshot, dst, size); 
+            printf("\nAfter:\n");
+            dump_ram_region(cpu, dst, size); 
+            printf("\n");
+            exit(1);
+        }
+    }
+
+    return 0;
 }
 
-
-void 
-dump_ram(struct CPU *cpu)
+#define MIN(__a, __b) (__a) < (__b) ? (__a) : (__b)
+void
+dump_ram_region(struct CPU *cpu, size_t start, size_t size)
 {
     size_t i;
 
-    printf("          ");
-    for(i = 0; i < 16; i++)
+    while(start % 16)
     {
-        printf("%02lx ", i);
+        start -= 1;
     }
+    
 
-    for(i = 0; i < cpu->ram_size; i++)
+    printf("\nMemory dump start: %08lx\n", start);
+    printf("          ");
+
+    for (i = 0; i < 16; i++)
     {
-        if(i % 16 == 0)
+        printf("%02lx  ", i);
+    }
+    
+    for (i = start; MIN(i < start + size, cpu->ram_size); i++)
+    {
+        if (i % 16 == 0)
         {
             printf("\n%08lx  ", i);
         }
 
-        printf("%02x ", cpu->ram[i]);
+        printf("%02x  ", cpu->ram[i]);
     }
 
+    printf("\n");
 }
