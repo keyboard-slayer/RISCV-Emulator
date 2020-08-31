@@ -25,18 +25,20 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- */ 
+ */
 
 #ifndef _RISCV_EMULATOR_CPU_H
 #define _RISCV_EMULATOR_CPU_H
 
 #include <stdint.h>
+#define RAM_SIZE 65535          /* 64 Kib of ram */
 
-struct cpu
+struct CPU
 {
     uint64_t x[32];             /* Interger registers */
     double f[32];               /* Floating point registers */
     uint64_t pc;                /* Program counter */
+    uint8_t ram[RAM_SIZE];      /* Best ram ever, implented to the CPU incredible */
 };
 
 enum
@@ -103,5 +105,8 @@ enum
     FT10,
     FT11
 };
+
+
+void reset_cpu(struct CPU *);
 
 #endif

@@ -25,7 +25,7 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- */ 
+ */
 
 #include "elf.h"
 
@@ -34,44 +34,12 @@
 #include <errno.h>
 #include <stddef.h>
 #include <string.h>
-#include <byteswap.h>
-#include <unistd.h>
-
-void
-swap_bytes(struct ELF *elf)
-{
-    if (elf->endianness > 2 || elf->endianness > 1)
-    {
-        fprintf(stderr, "Invalid ELF endianness: %d !\n", elf->endianness);
-        exit(1);
-    }
-
-
-    if (elf->endianness == 2)
-    {
-        return;
-    }
-
-    elf->magic = __bswap_32(elf->magic);
-    elf->e_type = __bswap_16(elf->e_type);
-    elf->e_machine = __bswap_16(elf->e_machine);
-    elf->e_version = __bswap_32(elf->e_machine);
-    elf->e_entry = __bswap_64(elf->e_entry);
-    elf->e_phoff = __bswap_64(elf->e_phoff);
-    elf->e_flags = __bswap_32(elf->e_flags);
-    elf->e_ehsize = __bswap_16(elf->e_ehsize);
-    elf->e_phentsize = __bswap_16(elf->e_phentsize);
-    elf->e_phnum = __bswap_16(elf->e_phnum);
-    elf->e_shentsize = __bswap_16(elf->e_shentsize);
-    elf->e_shnum = __bswap_16(elf->e_shnum);
-    elf->e_shstrndx = __bswap_16(elf->e_shstrndx);
-}
-
 
 struct ELF
 open_elf(char *filename)
 {
     struct ELF elf;
+
     FILE *fp = fopen(filename, "rb");
 
     if (fp == NULL)
@@ -80,29 +48,30 @@ open_elf(char *filename)
         exit(1);
     }
 
+    fread(&elf, 1, sizeof(struct ELF), fp);
 
-    fread(&elf, sizeof(struct ELF), 1, fp);
-    swap_bytes(&elf);
-
-    if (elf.magic != 0x7f454c46)
+    if (elf.e_ident[0] != 0x7f && elf.e_ident[1] != 'E' && elf.e_ident[2] != 'L'
+        && elf.e_ident[3] != 'F')
     {
-        printf("%s is not a valid ELF file\nMAGIC: 0x%x", filename,
-               elf.magic);
+        printf("%s is not a valid ELF file\nMAGIC: 0x%x%x%x%x", filename,
+               elf.e_ident[0], elf.e_ident[1], elf.e_ident[2], elf.e_ident[3]);
         exit(1);
     }
 
-    if (elf.abi != 0x03 && elf.abi != 0x00)
+
+    if (elf.e_ident[7] != 0x03 && elf.e_ident[7] != 0x00)
     {
         printf("This emulator can only emulate Linux Binaries\n");
         exit(1);
     }
 
 
-    if (elf.e_machine != 0xf300)
+    if (elf.e_machine != 0xf3)
     {
         printf("%s is not a valid RISV binary\n", filename);
         exit(1);
     }
+
 
     fclose(fp);
     return elf;

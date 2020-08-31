@@ -27,26 +27,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef _RISCV_EMULATOR_EMULATOR_H
+#define _RISCV_EMULATOR_EMULATOR_H
+
+#include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 
-#include "cpu.h"
 #include "elf.h"
-#include "emulator.h"
+#include "cpu.h"
 
-int
-main(int argc, char *argv[])
-{
-    struct ELF elf;
+void emulate(struct ELF, char *);
 
-    if (argc == 1)
-    {
-        fprintf(stderr, "Please specify a RISCV binary file\n");
-        exit(1);
-    }
-
-    elf = open_elf(argv[1]);
-    emulate(elf, argv[1]);
-
-    return 0;
-}
+#endif

@@ -27,26 +27,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "cpu.h"
-#include "elf.h"
-#include "emulator.h"
+#include <string.h>
 
-int
-main(int argc, char *argv[])
+void
+reset_cpu(struct CPU *cpu)
 {
-    struct ELF elf;
+    memset(cpu->f, 0, sizeof(cpu->f));
+    memset(cpu->x, 0, sizeof(cpu->x));
+    memset(cpu->ram, 0, sizeof(cpu->ram));
 
-    if (argc == 1)
-    {
-        fprintf(stderr, "Please specify a RISCV binary file\n");
-        exit(1);
-    }
-
-    elf = open_elf(argv[1]);
-    emulate(elf, argv[1]);
-
-    return 0;
+    cpu->pc = 0;
 }

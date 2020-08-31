@@ -27,26 +27,32 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdio.h>
+#include "emulator.h"
+#include "elf.h"
+#include <stddef.h>
 #include <stdlib.h>
 
-#include "cpu.h"
-#include "elf.h"
-#include "emulator.h"
-
-int
-main(int argc, char *argv[])
+void
+emulate(struct ELF elf, char *filename)
 {
-    struct ELF elf;
+    size_t i;
+    struct CPU cpu;
+    struct PROG prog;
+    FILE *fp = fopen(filename, "rb");
 
-    if (argc == 1)
+    reset_cpu(&cpu);
+    
+
+    for(i = 0; i < elf.e_phnum; i++)
     {
-        fprintf(stderr, "Please specify a RISCV binary file\n");
-        exit(1);
+        printf("%d\n", elf.e_phnum);
+        fseek(fp, elf.e_phoff + i * elf.e_phentsize, SEEK_SET);
+        fread(&prog, 1, sizeof(struct PROG), fp);
+
+        if(prog.p_type == 0x1)
+        {
+            printf("TODO\n");
+        }
     }
 
-    elf = open_elf(argv[1]);
-    emulate(elf, argv[1]);
-
-    return 0;
 }

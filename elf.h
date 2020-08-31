@@ -25,24 +25,18 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- */ 
+ */
 
 
 #ifndef _RISCV_EMULATOR_ELF_H
 #define _RISCV_EMULATOR_ELF_H
 
 #include <stdint.h>
+#include <stddef.h>
 
 struct ELF
 {
-    uint32_t magic;        
-    uint8_t bits;           
-    uint8_t endianness;    
-    uint8_t elf_bit;
-    uint8_t abi;
-    uint8_t abiver;
-    uint8_t pad[7];
-
+    uint8_t e_ident[16];
     uint16_t e_type;
     uint16_t e_machine;
     uint32_t e_version;
@@ -56,6 +50,32 @@ struct ELF
     uint16_t e_shentsize;
     uint16_t e_shnum;
     uint16_t e_shstrndx;
+};
+
+struct PROG
+{
+    uint32_t p_type;
+    uint32_t p_flags;
+    uint64_t p_offset;
+    uint64_t p_vaddr;
+    uint64_t p_paddr;
+    uint64_t p_filesz;
+    uint64_t p_memsz;
+    uint64_t p_align;
+};
+
+struct SECTION
+{
+    uint32_t sh_name;
+    uint32_t sh_type;
+    uint64_t sh_flags;
+    uint64_t sh_addr;
+    uint64_t sh_offset;
+    uint64_t sh_size;
+    uint32_t sh_link;
+    uint32_t sh_info;
+    uint64_t sh_addralign;
+    uint64_t sh_entsize;
 };
 
 struct ELF open_elf(char *);
