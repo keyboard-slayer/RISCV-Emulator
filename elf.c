@@ -58,7 +58,6 @@ open_elf(char *filename)
         exit(1);
     }
 
-
     if (elf.e_ident[7] != 0x03 && elf.e_ident[7] != 0x00)
     {
         printf("This emulator can only emulate Linux Binaries\n");
@@ -71,7 +70,6 @@ open_elf(char *filename)
         printf("%s is not a valid RISV binary\n", filename);
         exit(1);
     }
-
 
     fclose(fp);
     return elf;

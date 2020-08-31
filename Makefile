@@ -7,7 +7,8 @@ CFLAGS := 				\
 	-Werror				\
 	-ansi				\
 	-pedantic			\
-	-pedantic-errors
+	-pedantic-errors	\
+
 
 BUILD_DIRECTORY = $(shell pwd)/build
 DIRECTORY_GUARD=@mkdir -p $(@D)
@@ -18,7 +19,7 @@ BINARY = riscv-emulator
 
 $(BINARY): $(OBJECTS)
 	$(DIRECTORY_GUARD)
-	$(CC) -g $^ -o $@ 
+	$(CC) $(CFLAGS) -g $^ -o $@ 
 
 $(BUILD_DIRECTORY)/%.o: %.c
 	$(DIRECTORY_GUARD)

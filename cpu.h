@@ -31,6 +31,8 @@
 #define _RISCV_EMULATOR_CPU_H
 
 #include <stdint.h>
+#include <stddef.h>
+
 #define RAM_SIZE 65535          /* 64 Kib of ram */
 
 struct CPU
@@ -38,7 +40,8 @@ struct CPU
     uint64_t x[32];             /* Interger registers */
     double f[32];               /* Floating point registers */
     uint64_t pc;                /* Program counter */
-    uint8_t ram[RAM_SIZE];      /* Best ram ever, implented to the CPU incredible */
+    uint8_t *ram;               /* Best ram ever, implented to the CPU incredible */
+    size_t ram_size;
 };
 
 enum
@@ -107,6 +110,6 @@ enum
 };
 
 
-void reset_cpu(struct CPU *);
+void reset_cpu(struct CPU *, uint64_t);
 
 #endif

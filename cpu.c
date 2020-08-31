@@ -29,13 +29,14 @@
 
 #include "cpu.h"
 #include <string.h>
+#include <stdlib.h>
 
 void
-reset_cpu(struct CPU *cpu)
+reset_cpu(struct CPU *cpu, uint64_t size)
 {
     memset(cpu->f, 0, sizeof(cpu->f));
     memset(cpu->x, 0, sizeof(cpu->x));
-    memset(cpu->ram, 0, sizeof(cpu->ram));
-
+    cpu->ram = (uint8_t *) calloc(size+0x1000000, sizeof(uint8_t));
+    cpu->ram_size = size + 0x1000000;
     cpu->pc = 0;
 }
