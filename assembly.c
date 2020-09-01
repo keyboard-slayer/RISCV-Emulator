@@ -29,6 +29,7 @@
 
 #include "assembly.h"
 #include "emulator.h"
+#include "table-opcode.h"
 
 #include <stdio.h>
 #include <byteswap.h>
@@ -42,26 +43,26 @@
 
 extern int errno;
 
-void 
+void
 li(struct CPU *cpu, uint32_t rd, uint32_t imm)
 {
     cpu->x[rd] = imm;
 }
 
 
-void 
+void
 addi(struct CPU *cpu, uint32_t rd, uint32_t rs1, uint32_t imm)
 {
     cpu->x[rd] = cpu->x[rs1] + imm;
 }
 
-void 
+void
 aupic(struct CPU *cpu, uint32_t rd, uint32_t imm)
 {
     cpu->x[rd] = cpu->pc + (imm << 12);
 }
 
-void 
+void
 ecall(struct CPU *cpu)
 {
     uint32_t real_syscall;
@@ -76,14 +77,14 @@ ecall(struct CPU *cpu)
     uintptr_t a4 = cpu->x[14];
     uintptr_t a5 = cpu->x[15];
 
-    switch(syscall_nbr)
+    switch (syscall_nbr)
     {
         case 64:
             real_syscall = SYS_write;
             buffer = (char *) malloc(sizeof(char) * a2);
-            memcpy(buffer, cpu->ram+a1, a2);
+            memcpy(buffer, cpu->ram + a1, a2);
 
-            a1 = (uintptr_t)buffer;
+            a1 = (uintptr_t) buffer;
 
             break;
         case 93:
@@ -94,10 +95,13 @@ ecall(struct CPU *cpu)
             exit(1);
     }
 
-    if(syscall(real_syscall, a0, a1, a2, a3, a4, a5) == -1)
+    if (syscall(real_syscall, a0, a1, a2, a3, a4, a5) == -1)
     {
-        printf("\nSYSCALL 0x%08x (%d) ERROR: %s\n", syscall_nbr, syscall_nbr, strerror(errno));
-        printf("REGISTERS VALUE:\n\ta0: 0x%08lx (%ld)\ta1: 0x%08lx (%ld)\ta2: 0x%08lx (%ld)\n\ta3: 0x%08lx (%ld)\ta4: 0x%08lx (%ld)\ta5: 0x%08lx (%ld)\n\n", a0, a0, a1, a1, a2, a2, a3, a3, a4, a4, a5, a5);
+        printf("\nSYSCALL 0x%08x (%d) ERROR: %s\n", syscall_nbr, syscall_nbr,
+               strerror(errno));
+        printf
+            ("REGISTERS VALUE:\n\ta0: 0x%08lx (%ld)\ta1: 0x%08lx (%ld)\ta2: 0x%08lx (%ld)\n\ta3: 0x%08lx (%ld)\ta4: 0x%08lx (%ld)\ta5: 0x%08lx (%ld)\n\n",
+             a0, a0, a1, a1, a2, a2, a3, a3, a4, a4, a5, a5);
         exit(1);
     }
 
@@ -105,19 +109,22 @@ ecall(struct CPU *cpu)
 }
 
 void
-interpret(struct CPU *cpu, uint32_t opcodes)
+interpret(struct CPU *cpu, uint32_t instructions)
 {
     union OPCODE opcode;
     bool print_end = true;
-    opcode.opcode = __bswap_32(opcodes);
 
-    switch(opcode.I.opcode)
+    opcode.opcode = instructions;
+
+    printf("\033[90m");
+
+    switch (opcode.I.opcode)
     {
         case 0x13:
-            switch(opcode.I.funct3)
+            switch (opcode.I.funct3)
             {
                 case 0:
-                    if(opcode.I.rs1 == 0)
+                    if (opcode.I.rs1 == 0)
                     {
                         printf("li x%d, %d\n", opcode.I.rd, opcode.I.imm11_0);
                         li(cpu, opcode.I.rd, opcode.I.imm11_0);
@@ -129,7 +136,7 @@ interpret(struct CPU *cpu, uint32_t opcodes)
                         printf("addi");
                         addi(cpu, opcode.I.rd, opcode.I.rs1, opcode.I.imm11_0);
                     }
-                    
+
                     break;
                 case 1:
                     printf("slli");
@@ -144,21 +151,21 @@ interpret(struct CPU *cpu, uint32_t opcodes)
                     printf("xori");
                     break;
                 case 5:
-                    if(opcode.I.imm11_0 == 0)
+                    if (opcode.I.imm11_0 == 0)
                     {
                         printf("srli");
-                    } 
+                    }
 
-                    else if(opcode.I.imm11_0 == 0x20)
+                    else if (opcode.I.imm11_0 == 0x20)
                     {
                         printf("srai");
                     }
 
-                    else 
+                    else
                     {
                         printf("INVALID OPCODE !\n");
                     }
-                    
+
                     break;
                 case 6:
                     printf("ori");
@@ -168,7 +175,7 @@ interpret(struct CPU *cpu, uint32_t opcodes)
                     break;
             }
 
-            if(print_end)
+            if (print_end)
             {
                 printf(" x%d, x%d, %d\n", opcode.I.rd, opcode.I.rs1, opcode.I.imm11_0);
             }
@@ -179,29 +186,35 @@ interpret(struct CPU *cpu, uint32_t opcodes)
             printf("auipc x%d, %d\n", opcode.U.rd, opcode.U.imm31_12);
             aupic(cpu, opcode.U.rd, opcode.U.imm31_12);
             break;
-        
+
         case 0x73:
 
-            if(opcode.I.imm11_0 == 0)
+            if (opcode.I.imm11_0 == 0)
             {
-                printf("ecall\n");
+                printf("ecall\033[39m\n");
                 ecall(cpu);
-            } 
+            }
 
-            else if(opcode.I.imm11_0 == 1)
+            else if (opcode.I.imm11_0 == 1)
             {
                 printf("ebreak\n");
             }
 
-            else 
+            else
             {
                 printf("INVALID OPCODE !\n");
             }
 
             break;
+        
         default:
             printf("The family opcode 0x%x is not implemented\n", opcode.I.opcode);
-            /*exit(1); */
+            /*
+             * exit(1); 
+             */
+        printf("\033[39m");
     }
+
+    cpu->pc += 4;
 
 }

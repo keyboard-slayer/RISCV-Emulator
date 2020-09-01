@@ -39,4 +39,5 @@ reset_cpu(struct CPU *cpu, uint64_t size)
     cpu->ram = (uint8_t *) calloc(size + 0x1000000, sizeof(uint8_t));
     cpu->ram_size = size + 0x1000000;
     cpu->pc = 0;
+    cpu->tried_16 = false;
 }

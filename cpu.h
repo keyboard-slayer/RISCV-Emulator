@@ -32,6 +32,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 #define RAM_SIZE 65535          /* 64 Kib of ram */
 
@@ -42,6 +43,7 @@ struct CPU
     uint64_t pc;                /* Program counter */
     uint8_t *ram;               /* Best ram ever, implented to the CPU incredible */
     size_t ram_size;
+    bool tried_16;
 };
 
 enum

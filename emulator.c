@@ -42,14 +42,11 @@ emulate(struct ELF elf, char *filename)
 {
     size_t i;
     uint64_t file_size;
-    uint32_t opcodes;
-    char instruction[17];
+    uint32_t instructions;
 
     struct CPU cpu;
     struct PROG prog;
     struct SECTION *section;
-
-    size_t zeros = 0;
 
     FILE *fp = fopen(filename, "rb");
 
@@ -82,41 +79,27 @@ emulate(struct ELF elf, char *filename)
         fseek(fp, elf.e_shoff + (i * elf.e_shentsize), SEEK_SET);
         fread(&section[i], sizeof(struct SECTION), 1, fp);
 
-        if(section->sh_offset != 0)
+        if (section->sh_offset != 0)
         {
             copy2ram(&cpu, fp, section->sh_offset, section->sh_size, section->sh_addr);
-        }        
+        }
     }
 
-    for (i = elf.e_entry;;)
+    cpu.pc = elf.e_entry;
+    while (true)
     {
-        if (cpu.ram[i] == 0)
-        {
-            zeros++;
-        }
+        instructions =
+            cpu.ram[cpu.pc] | cpu.ram[cpu.pc + 1] << 8 | cpu.ram[cpu.pc + 2] << 16 |
+            cpu.ram[cpu.pc + 3] << 24;
 
-        else
-        {
-            sprintf(instruction, "%02x%02x%02x%02x", cpu.ram[i], cpu.ram[i + 1],
-                    cpu.ram[i + 2], cpu.ram[i + 3]);
-            opcodes = (uint32_t) strtol(instruction, NULL, 16);
-
-            cpu.pc = i;
-            interpret(&cpu, opcodes);
-            i += 4;
-        }
-
-        if (zeros == 9)
-        {
-            break;
-        }
+        interpret(&cpu, instructions);
     }
 }
 
 int8_t
 copy2ram(struct CPU *cpu, FILE * fp, uint64_t src, uint64_t size, uint64_t dst)
 {
-    size_t i; 
+    size_t i;
     struct CPU cpu_snapshot;
 
     reset_cpu(&cpu_snapshot, cpu->ram_size - 0x1000000);
