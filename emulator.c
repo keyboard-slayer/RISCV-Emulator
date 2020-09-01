@@ -81,6 +81,11 @@ emulate(struct ELF elf, char *filename)
     {
         fseek(fp, elf.e_shoff + (i * elf.e_shentsize), SEEK_SET);
         fread(&section[i], sizeof(struct SECTION), 1, fp);
+
+        if(section->sh_offset != 0)
+        {
+            copy2ram(&cpu, fp, section->sh_offset, section->sh_size, section->sh_addr);
+        }        
     }
 
     for (i = elf.e_entry;;)
@@ -96,6 +101,7 @@ emulate(struct ELF elf, char *filename)
                     cpu.ram[i + 2], cpu.ram[i + 3]);
             opcodes = (uint32_t) strtol(instruction, NULL, 16);
 
+            cpu.pc = i;
             interpret(&cpu, opcodes);
             i += 4;
         }
@@ -110,7 +116,7 @@ emulate(struct ELF elf, char *filename)
 int8_t
 copy2ram(struct CPU *cpu, FILE * fp, uint64_t src, uint64_t size, uint64_t dst)
 {
-    size_t i;
+    size_t i; 
     struct CPU cpu_snapshot;
 
     reset_cpu(&cpu_snapshot, cpu->ram_size - 0x1000000);
@@ -147,10 +153,11 @@ dump_ram_region(struct CPU *cpu, size_t start, size_t size)
     while (start % 16)
     {
         start -= 1;
+        size++;
     }
 
 
-    printf("\nMemory dump start: %08lx\n", start);
+    printf("\nMemory dump start: 0x%08lx (%08ld) \n", start, start);
     printf("          ");
 
     for (i = 0; i < 16; i++)

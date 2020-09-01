@@ -5,7 +5,6 @@ CFLAGS := 				\
 	-Wall				\
 	-Wextra				\
 	-Werror				\
-	-ansi				\
 	-pedantic			\
 	-pedantic-errors	\
 

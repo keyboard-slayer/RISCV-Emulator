@@ -38,53 +38,54 @@ union OPCODE
 {
     struct
     {
-        uint8_t opcode:7;
-        uint8_t rd:5;
-        uint8_t funct3:3;
-        uint8_t rs1:5;
-        uint8_t rs2:5;
-        uint8_t funct7:7;
+        uint32_t opcode:7;
+        uint32_t rd:5;
+        uint32_t funct3:3;
+        uint32_t rs1:5;
+        uint32_t rs2:5;
+        uint32_t funct7:7;
     } R;
 
     struct
     {
-        uint8_t opcode:7;
-        uint8_t rd:5;
-        uint8_t rs1:5;
-        uint16_t imm11_0:15;
+        uint32_t opcode:7;
+        uint32_t rd:5;
+        uint32_t funct3: 3;
+        uint32_t rs1:5;
+        uint32_t imm11_0:12;
     } I;
 
     struct
     {
-        uint8_t opcode:7;
-        uint8_t imm4_0:5;
-        uint8_t funct3:3;
-        uint8_t rs1:5;
-        uint8_t rs2:5;
-        uint8_t imm11_5:7;
+        uint32_t opcode:7;
+        uint32_t imm4_0:5;
+        uint32_t funct3:3;
+        uint32_t rs1:5;
+        uint32_t rs2:5;
+        uint32_t imm11_5:7;
     } S;
 
     struct
     {
-        uint8_t opcode:7;
-        uint8_t imm4_1_11:5;
-        uint8_t funct3:3;
-        uint8_t rs1:5;
-        uint8_t rs2:5;
-        uint8_t imm_12_10_5:7;
+        uint32_t opcode:7;
+        uint32_t imm4_1_11:5;
+        uint32_t funct3:3;
+        uint32_t rs1:5;
+        uint32_t rs2:5;
+        uint32_t imm_12_10_5:7;
     } SB;
 
     struct
     {
-        uint8_t opcode:7;
-        uint8_t rd:5;
+        uint32_t opcode:7;
+        uint32_t rd:5;
         uint32_t imm31_12:20;
     } U;
 
     struct
     {
-        uint8_t opcode:7;
-        uint8_t rd:5;
+        uint32_t opcode:7;
+        uint32_t rd:5;
         uint32_t imm_20_10_1_11_19_12:20;
     } UJ;
 
@@ -92,5 +93,9 @@ union OPCODE
 };
 
 void interpret(struct CPU *, uint32_t);
+void li(struct CPU *, uint32_t, uint32_t);
+void addi(struct CPU *, uint32_t, uint32_t, uint32_t);
+void aupic(struct CPU *, uint32_t, uint32_t);
+void ecall(struct CPU *);
 
 #endif
